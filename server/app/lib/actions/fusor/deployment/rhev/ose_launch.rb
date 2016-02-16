@@ -14,10 +14,10 @@ module Actions
   module Fusor
     module Deployment
       module Rhev
-        #Setup and Launch CFME VM
-        class CfmeLaunch < Actions::Fusor::FusorBaseAction
+        #Setup and Launch OSE VM
+        class OseLaunch < Actions::Fusor::FusorBaseAction
           def humanized_name
-            _('Setup and Launch CFME VM')
+            _('Setup and Launch OSE VM')
           end
 
           def plan(deployment)
@@ -26,9 +26,9 @@ module Actions
           end
 
           def run
-            ::Fusor.log.debug '====== CFME Launch run method ======'
+            ::Fusor.log.debug '====== OSE Launch run method ======'
             deployment = ::Fusor::Deployment.find(input[:deployment_id])
-            vmlauncher = Utils::Fusor::VMLauncher.new(deployment, "cfme", "RHEV")
+            vmlauncher = Utils::Fusor::VMLauncher.new(deployment, "ose", "RHEV" )
             compute_attrs = vmlauncher.create_compute_profile.vm_attrs
             hg_id = Hostgroup.where(name: deployment.label).first.id
             host_attrs = {"ptable_id" => Ptable.find { |p| p["name"] == "Kickstart default" }.id,
@@ -41,18 +41,19 @@ module Actions
                           "compute_attributes" => {"start" => "1"}.with_indifferent_access.merge(compute_attrs)}
             vmlauncher.update_host_attrs(host_attrs)
             host = vmlauncher.launch_vm
-            deployment.cfme_address  = host.ip
-            deployment.cfme_hostname = host.name
-            deployment.save!
-            ::Fusor.log.debug '====== Leaving CFME Launch run method ======'
+            
+            #deployment.ose_address  = host.ip
+            #deployment.ose_hostname = host.name
+            #deployment.save!
+            ::Fusor.log.debug '====== Leaving OSE Launch run method ======'
           end
 
-          def cfme_launch_completed
-            ::Fusor.log.info 'CFME Launch Completed'
+          def ose_launch_completed
+            ::Fusor.log.info 'OSE Launch Completed'
           end
 
-          def cfme_launch_failed
-            fail _('CFME Launch failed')
+          def ose_launch_failed
+            fail _('OSE Launch failed')
           end
         end
       end

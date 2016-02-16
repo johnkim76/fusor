@@ -46,7 +46,16 @@ module Actions
           if deployment.deploy_cfme
             plan_action(::Actions::Fusor::Deployment::CloudForms::DeployAsSubPlan,
                         deployment)
+
+            # temp added here
+            plan_action(::Actions::Fusor::Deployment::OpenShift::DeployAsSubPlan,
+                        deployment)
           end
+
+          #if deployment.deploy_ose
+          #  plan_action(::Actions::Fusor::Deployment::OpenShift::DeployAsSubPlan,
+          #              deployment)
+          #end
         end
         plan_self(:deployment_label => deployment.label, :deployment_id => deployment.id)
       end
