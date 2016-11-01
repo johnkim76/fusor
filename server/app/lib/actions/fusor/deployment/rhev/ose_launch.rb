@@ -31,17 +31,10 @@ module Actions
           def run
             ::Fusor.log.info '====== OSE Launch run method ======'
             deployment = ::Fusor::Deployment.find(input[:deployment_id])
-            hostgroup = find_hostgroup(deployment, 'OpenShift')
 
             generate_root_password(deployment)
 
-            os = Operatingsystem.find(hostgroup.operatingsystem_id)
-            ptable_name = "#{hostgroup.name} Ptable"
-            ensure_vda_only_ptable(ptable_name)
-            update_ptable_for_os(ptable_name, os.title)
-            update_hostgroup_ptable(hostgroup, ptable_name)
-
-            ks_name = "#{hostgroup.name} Kickstart"
+            ks_name = "OpenShift Kickstart"
             snippet_name = "rhevm_guest_agent"
             repos = SETTINGS[:fusor][:content][:openshift].map { |p| p[:repository_set_label] if p[:repository_set_label] =~ /rpms$/ }.compact
             ct_util = Utils::Fusor::ConfigTemplateUtils.new({:rhevm_guest_agent_snippet_name => snippet_name, :enabled_repos => repos})
@@ -151,98 +144,12 @@ module Actions
 
           private
 
-          def find_hostgroup(deployment, name)
-            # locate the top-level hostgroup for the deployment...
-            # currently, we'll create a hostgroup with the same name as the
-            # deployment...
-            # Note: you need to scope the query to organization
-            parent = ::Hostgroup.where(:name => deployment.label).
-                joins(:organizations).
-                where("taxonomies.id in (?)", [deployment.organization.id]).first
-
-            # generate the ancestry, so that we can locate the hostgroups
-            # based on the hostgroup hierarchy, which assumes:
-            #  "Fusor Base"/"My Deployment"
-            # Note: there may be a better way in foreman to locate the hostgroup
-            if parent
-              if parent.ancestry
-                ancestry = [parent.ancestry, parent.id.to_s].join('/')
-              else
-                ancestry = parent.id.to_s
-              end
-            end
-
-            # locate the engine hostgroup...
-            ::Hostgroup.where(:name => name).
-                where(:ancestry => ancestry).
-                joins(:organizations).
-                where("taxonomies.id in (?)", [deployment.organization.id]).first
-          end
-
           def generate_root_password(deployment)
             ::Fusor.log.info '====== Generating randomized password for root access ======'
             deployment.openshift_root_password = SecureRandom.hex(10)
             deployment.save!
           end
 
-          def ensure_vda_only_ptable(ptable_name)
-            default_name = "Kickstart default"
-
-            if !Ptable.exists?(:name => default_name)
-              fail _("====== The expected '#{default_name}' ptable does not exist! ======")
-            end
-
-            if Ptable.exists?(:name => ptable_name)
-              ::Fusor.log.debug "====== Partition table '#{ptable_name}' already exists! Nothing to do. ====== "
-              return
-            end
-
-            defaultptable = Ptable.find_by_name(default_name)
-            oseptable = defaultptable.dup
-
-            layoutstring = oseptable.layout.clone
-            layoutstring.sub! default_name, ptable_name
-            layoutstring.sub! "autopart", "ignoredisk --only-use=vda\nautopart"
-
-            oseptable.layout = layoutstring
-            oseptable.name = ptable_name
-            oseptable.save!
-            ::Fusor.log.debug "====== Created a new Partition table '#{ptable_name}' ====== "
-          end
-
-          def update_ptable_for_os(ptable_name, os_name)
-            ptable = Ptable.find_by_name(ptable_name)
-            if ptable.nil?
-              fail _("====== ptable name '#{ptable_name}' does not exist! ======")
-            end
-
-            os = Operatingsystem.find_by_to_label(os_name)
-            if os.nil?
-              fail _("====== OS name '#{os_name}' does not exist! ======")
-            end
-
-            if os.ptables.exists?(ptable)
-              ::Fusor.log.debug "====== The '#{ptable_name}' ptable already exists as option in '#{os_name}'! Nothing to do. ====== "
-              return
-            end
-            os.ptables << ptable
-            os.save!
-            ::Fusor.log.debug "====== Added '#{ptable_name}' ptable option to '#{os_name}' ====== "
-          end
-
-          def update_hostgroup_ptable(hostgroup, ptable_name)
-            ptable = Ptable.find_by_name(ptable_name)
-            if ptable.nil?
-              fail _("====== ptable name '#{ptable_name}' does not exist! ======")
-            end
-
-            if hostgroup.nil?
-              fail _("====== Hostgroup is nill ======")
-            end
-            hostgroup.ptable_id = ptable.id
-            hostgroup.save!
-            ::Fusor.log.debug "====== Updated host group '#{hostgroup}' to use '#{ptable_name}' ptable ====== "
-          end
         end
       end
     end

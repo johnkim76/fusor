@@ -150,6 +150,8 @@ module Actions
             deployment.rhev_root_password
           when "cfme"
             deployment.cfme_root_password
+          when "ceph"
+            deployment.ceph_deployment.ssh_pass
         end
       end
 

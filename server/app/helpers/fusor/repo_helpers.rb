@@ -15,6 +15,10 @@ module Fusor
       ],
       openshift: [
         :openshift
+      ],
+      ceph: [
+        :osd,
+        :mon
       ]
     }
 
