@@ -38,6 +38,12 @@ module Actions
               deployment)
           end
 
+          plan_action(::Actions::Fusor::Deployment::PrepareOrg::UpdateSingleDiskHostgroups, deployment)
+
+          if deployment.deploy_ceph
+            plan_action(::Actions::Fusor::Deployment::Ceph::DeployAsSubPlan, deployment)
+          end
+
           concurrence do
             if deployment.deploy_rhev
               plan_action(::Actions::Fusor::Deployment::Rhev::DeployAsSubPlan,

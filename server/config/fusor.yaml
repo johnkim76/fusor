@@ -318,6 +318,70 @@
         :basearch: "x86_64"
         :releasever: "7Server"
 
+    :osd:
+      - :product_name: "Red Hat Enterprise Linux Server"
+        :product_id: "69"
+        :repository_set_id: "2456"
+        :repository_set_name: "Red Hat Enterprise Linux 7 Server (RPMs)"
+        :repository_set_label: "rhel-7-server-rpms"
+        :basearch: "x86_64"
+        :releasever: "7Server"
+
+      - :product_name: "Red Hat Enterprise Linux Server"
+        :product_id: "69"
+        :repository_set_id: "2455"
+        :repository_set_name: "Red Hat Enterprise Linux 7 Server (Kickstart)"
+        :repository_set_label: "rhel-7-server-kickstart"
+        :basearch: "x86_64"
+        :releasever: "7.2"
+
+      - :product_name: "Red Hat Enterprise Linux Server"
+        :product_id: "69"
+        :repository_set_id: "4831"
+        :repository_set_name: "Red Hat Satellite Tools 6.2 (for RHEL 7 Server) (RPMs)"
+        :repository_set_label: "rhel-7-server-satellite-tools-6.2-rpms"
+        :basearch: "x86_64"
+
+      - :product_name: "Red Hat Ceph Storage OSD 2"
+        :product_id: "288"
+        :repository_set_id: "4916"
+        :repository_set_name: "Red Hat Ceph Storage OSD 2 for Red Hat Enterprise Linux 7 Server (RPMs)"
+        :repository_set_label: "rhel-7-server-rhceph-2-osd-rpms"
+        :basearch: "x86_64"
+        :releasever: "7Server"
+
+    :mon:
+      - :product_name: "Red Hat Enterprise Linux Server"
+        :product_id: "69"
+        :repository_set_id: "2456"
+        :repository_set_name: "Red Hat Enterprise Linux 7 Server (RPMs)"
+        :repository_set_label: "rhel-7-server-rpms"
+        :basearch: "x86_64"
+        :releasever: "7Server"
+
+      - :product_name: "Red Hat Enterprise Linux Server"
+        :product_id: "69"
+        :repository_set_id: "2455"
+        :repository_set_name: "Red Hat Enterprise Linux 7 Server (Kickstart)"
+        :repository_set_label: "rhel-7-server-kickstart"
+        :basearch: "x86_64"
+        :releasever: "7.2"
+
+      - :product_name: "Red Hat Enterprise Linux Server"
+        :product_id: "69"
+        :repository_set_id: "4831"
+        :repository_set_name: "Red Hat Satellite Tools 6.2 (for RHEL 7 Server) (RPMs)"
+        :repository_set_label: "rhel-7-server-satellite-tools-6.2-rpms"
+        :basearch: "x86_64"
+
+      - :product_name: "Red Hat Ceph Storage Mon 2"
+        :product_id: "286"
+        :repository_set_id: "4913"
+        :repository_set_name: "Red Hat Ceph Storage MON 2 for Red Hat Enterprise Linux 7 Server (RPMs)"
+        :repository_set_label: "rhel-7-server-rhceph-2-mon-rpms"
+        :basearch: "x86_64"
+        :releasever: "7Server"
+
   :puppet_classes:
 
   :docker_repos:
@@ -378,6 +442,35 @@
            :content: :rhevsh
            :subscription_descriptions:
              - "Red Hat Cloud Infrastructure"
+
+    :ceph:
+     :root_name: "Fusor Base" # seeded by the fusor-installer
+     :host_groups:
+       - :parent: "Fusor Base"
+
+       - :name: "OSD"
+         :os: "RedHat"
+         :major: "7"
+         :minor: "3"
+         :parent: :root_deployment
+         :puppet_classes:
+         :activation_key:
+           :name: "OSD"
+           :content: :osd
+           :subscription_descriptions:
+             - "Red Hat Ceph OSD"
+
+       - :name: "MON"
+         :os: "RedHat"
+         :major: "7"
+         :minor: "3"
+         :parent: :root_deployment
+         :puppet_classes:
+         :activation_key:
+           :name: "MON"
+           :content: :mon
+           :subscription_descriptions:
+             - "Red Hat Ceph MON"
 
     :openshift:
      :root_name: "Fusor Base" # seeded by the fusor-installer
