@@ -16,11 +16,13 @@ module Fusor
     # on update because we don't want to validate the empty object when
     # it is first created
     validates_with Fusor::Validators::DeploymentValidator, on: :update
+    validates_associated :ceph_deployment, on: :update
     validates_associated :openstack_deployment, on: :update
 
     belongs_to :organization
     belongs_to :lifecycle_environment, :class_name => "Katello::KTEnvironment"
 
+    belongs_to :ceph_deployment, :class_name => "Fusor::CephDeployment", dependent: :destroy
     belongs_to :openstack_deployment, :class_name => "Fusor::OpenstackDeployment", dependent: :destroy
 
     validates :name, :presence => true, :uniqueness => {:scope => :organization_id}
@@ -58,8 +60,9 @@ module Fusor
     belongs_to :foreman_task, :class_name => "::ForemanTasks::Task", :foreign_key => :foreman_task_uuid
 
     after_initialize :setup_warnings
-    before_validation :update_label, :ensure_openstack_deployment, :ensure_ssh_keys, on: :create  # we validate on create, so we need to do it before those validations
-    before_save :update_label, :ensure_openstack_deployment, on: :update        # but we don't validate on update, so we need to call before_save
+    before_validation :update_label, :ensure_openstack_deployment, :ensure_ceph_deployment,
+                      :ensure_ssh_keys, on: :create  # we validate on create, so we need to do it before those validations
+    before_save :update_label, :ensure_openstack_deployment, :ensure_ceph_deployment, on: :update # but we don't validate on update, so we need to call before_save
 
     scoped_search :on => [:id, :name, :updated_at], :complete_value => true
     scoped_search :in => :organization, :on => :name, :rename => :organization
@@ -69,7 +72,7 @@ module Fusor
     # used by ember-data for .find('model', {id: [1,2,3]})
     scope :by_id, proc { |n| where(:id => n) if n.present? }
 
-    DEPLOYMENT_TYPES = [:rhev, :cfme, :openstack, :openshift]
+    DEPLOYMENT_TYPES = [:rhev, :cfme, :openstack, :openshift, :ceph]
 
     attr_accessor :warnings
 
@@ -123,6 +126,15 @@ module Fusor
         self.ssh_private_key = keys[:private_key]
         self.ssh_public_key = keys[:public_key]
       end
+    end
+
+    def ensure_ceph_deployment
+      if deploy_ceph?
+        self.ceph_deployment ||= Fusor::CephDeployment.create
+      else
+        self.ceph_deployment.destroy if ceph_deployment
+      end
+      true
     end
   end
 end
