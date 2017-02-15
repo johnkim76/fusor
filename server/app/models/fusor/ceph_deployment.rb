@@ -35,9 +35,9 @@ module Fusor
     #validates_with Fusor::Validators::OpenstackDeploymentValidator, on: :update
 
     has_one :deployment, :class_name => "Fusor::Deployment"
-    has_many :mon_deployment_hosts, -> { where(:deployment_host_type => 'mon') }, :class_name => "Fusor::DeploymentHost"
+    has_many :mon_deployment_hosts, -> { where(:deployment_host_type => 'mon') }, :class_name => "Fusor::CephDeploymentHost"
     has_many :mon_hosts, :through => :mon_deployment_hosts, :class_name => "::Host::Base", :source => :discovered_host
-    has_many :osd_deployment_hosts, -> { where(:deployment_host_type => 'osd') }, :class_name => "Fusor::DeploymentHost"
+    has_many :osd_deployment_hosts, -> { where(:deployment_host_type => 'osd') }, :class_name => "Fusor::CephDeploymentHost"
     has_many :osd_hosts, :through => :osd_deployment_hosts, :class_name => "::Host::Base", :source => :discovered_host
 
     def setup_warnings
